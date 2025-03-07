@@ -1,0 +1,189 @@
+﻿@inject IJSRuntime JSRuntime
+@inject StateContainer stateContainer
+@inject IStringLocalizer<Localization.SharedResource> Loc
+
+<hr class="mt-2 mb-0" />
+<div class="navbar p-0 pt-2">
+    <div>
+        @if (stateContainer.simulator == 0)
+        {
+            <button type="button" class="btn btn-pn oi oi-plus" style="width:100%" @onclick=SetToken> Set Token</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-pn oi oi-plus" style="width:100%" @onclick=SetToken disabled> Set Token</button>
+        }
+    </div>
+</div>
+<div class="navbar p-0 pt-1">
+    <div class="float-right">
+        @if (stateContainer.simulator == 1)
+        {
+            @if (stateContainer.selectedMulti.Count > 0)
+            {
+                <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken>Token</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken disabled>Token</button>
+            }
+        }
+        else
+        {
+            <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken disabled>Token</button>
+        }
+    </div>
+</div>
+<div class="navbar p-0 pt-2">
+    <div>
+        @if (stateContainer.simulator == 2)
+        {
+            <button type="button" class="btn btn-pn oi oi-media-stop" style="width:100%" @onclick=StopSimulation> Stop Simulation</button>
+        }
+        else
+        {
+            @if (stateContainer.simulator == 1)
+            {
+                @if(stateContainer.tokenList.Count != 0)
+                {
+                    <button type="button" class="btn btn-pn oi oi-media-play" style="width:100%" @onclick=StartSimulation> Start Simulation</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-pn oi oi-media-play" style="width:100%" @onclick=StartSimulation disabled> Start Simulation</button>
+                }
+            }
+            else
+            {
+                <button type="button" class="btn btn-pn oi oi-media-play" style="width:100%" @onclick=StartSimulation disabled> Start Simulation</button>
+            }
+        }
+    </div>
+</div>
+<div class="navbar p-0 pt-1">
+    <div class="float-right">
+        @if (stateContainer.simulator == 2)
+        {
+            @if (stateContainer.selectedMulti.Count > 0)
+            {
+                <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken>Token</button>
+                <button type="button" class="btn btn-sidebar" @onclick=Activate>Activate</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken disabled>Token</button>
+                <button type="button" class="btn btn-sidebar" @onclick=Activate disabled>Activate</button>
+            }
+        }
+        else
+        {
+            <button type="button" class="btn btn-sidebar" @onclick=ShowSetToken disabled>Token</button>
+            <button type="button" class="btn btn-sidebar" @onclick=Activate disabled>Activate</button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback refreshParent { get; set; }
+
+    private void ShowSetToken()
+    {
+        stateContainer.showPNTokenSet = !stateContainer.showPNTokenSet;
+        refreshParent.InvokeAsync();
+    }
+
+    private void SetToken()
+    {
+        stateContainer.simulator = 1;
+        Reset();
+    }
+
+    private void StartSimulation()
+    {
+        stateContainer.simulator = 2;
+        Reset();
+
+    }
+
+    private void StopSimulation()
+    {
+        stateContainer.simulator = 0;
+        stateContainer.tokenList.Clear();
+        stateContainer.preTokenList.Clear();
+        Reset();
+    }
+
+    private void Activate()
+    {
+        @foreach (var function in stateContainer.functionList.FindAll(x => stateContainer.selectedMulti.Contains(x.IDNr)))
+        {
+            int count = 0;
+            List<Aspect> removeAspectList = new List<Aspect>();
+            List<Token> removeTokenList = new List<Token>();
+            @foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.FunctionIDNr == function.IDNr))
+            {
+                count++;
+                @foreach (Token token in stateContainer.preTokenList)
+                {
+                    @if (token.Type == aspect.Type && token.To == function.IDNr && token.Name == aspect.IDName)
+                    {
+                        removeTokenList.Add(token);
+                        break;
+                    }
+                }
+            }
+            // Activateするのに必要な側面の数と揃ってる数がイコールか判定
+            if (count == removeTokenList.Count && count != 0)
+            {
+                @foreach (Aspect oaspect in stateContainer.outputsList.FindAll(x => x.FunctionIDNr == function.IDNr))
+                {
+                    @foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.IDName == oaspect.IDName))
+                    {
+                        var index = "0";
+                        @if (stateContainer.tokenList.Count() != 0)
+                        {
+                            index = (Int32.Parse(stateContainer.tokenList.Last().Index) + 1).ToString();
+                        }
+                        Token newToken = new Token(index, aspect.Type, aspect.IDName, function.IDNr, aspect.FunctionIDNr, "時間通り", "正確", "black");
+                        stateContainer.tokenList.Add(newToken);
+                        @foreach (Token token in removeTokenList)
+                        {
+                            stateContainer.preTokenList.Remove(token);
+                        }
+                    }
+                }
+                // Outputなしの場合
+                if (stateContainer.outputsList.FindAll(x => x.FunctionIDNr == function.IDNr).Count() == 0)
+                {
+                    @foreach (Token token in removeTokenList)
+                    {
+                        stateContainer.preTokenList.Remove(token);
+                    }
+                }
+            }
+
+        }
+        Reset();
+    }
+
+    private void Reset()
+    {
+        stateContainer.selectedFn = "-1";
+        stateContainer.selectedLabel = "";
+        stateContainer.cycleFMI = -1;
+        stateContainer.fmiMessage = "";
+        foreach (var fn in stateContainer.functionList)
+        {
+            fn.resetAspects();
+        }
+        foreach (var coupling in stateContainer.couplingList)
+        {
+            coupling.activated = false;
+            coupling.wasActive = false;
+            coupling.fmiHighlight = "";
+        }
+        refreshParent.InvokeAsync();
+    }
+
+}

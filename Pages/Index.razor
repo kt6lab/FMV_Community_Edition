@@ -25,6 +25,10 @@
 {
     <PDFout OnClose="ModalClose"></PDFout>
 }
+@if (stateContainer.showPNTokenSet)
+{
+    <PNTokenSet OnClose="ModalClose"></PNTokenSet>
+}
 <MenuBar refreshParent="refreshParent" onInputFileChange="OnInputFileChange" fileIsLoaded="FileIsLoaded" />
 <SideBar refreshParent="refreshParent" newFunction="NewFunction" nextFn="NextFn" />
 <div id="mainWindow" class="main" @onkeydown=NextFn tabindex="0">
@@ -110,6 +114,15 @@
                     {
                         <SelectMulti refreshParent="refreshParent" />
                     }
+                    @if (stateContainer.simulator == 2)
+                    {
+                        <PNAspectDisplay refreshParent="refreshParent" />
+                        <PNTokenMove refreshParent="refreshParent" />
+                    }
+                    @if (stateContainer.simulator != 0)
+                    {
+                        <PNTokenDisplay refreshParent="refreshParent" />
+                    }
                 }
                 @if (stateContainer.cycleFMI > -1)
                 {
@@ -122,6 +135,7 @@
                         </text>
                     </g>
                 }
+
             </svg>
             <p>
                 @stateContainer.debugOutput
@@ -164,6 +178,7 @@
         stateContainer.showColorPicker = state;
         stateContainer.showFMIPopup = state;
         stateContainer.showPDFreport = state;
+        stateContainer.showPNTokenSet = state;
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -631,6 +646,16 @@
                 stateContainer.functionList.Find(x => x.IDNr == aspect.FunctionIDNr)!.orphans = orphans;
             }
             aspectsA.SelectSingleNode("@WebEnhanced")!.Value = "notupdated";
+        }
+        stateContainer.simulator = 0;
+        stateContainer.tokenList.Clear();
+        stateContainer.preTokenList.Clear();
+        foreach (XmlNode itemToken in stateContainer.projectData_Undo[0].SelectNodes("//FM/Tokens/Token")!)
+        {
+            if (itemToken is not null)
+            {
+                stateContainer.tokenList.Add(new Token(itemToken.SelectSingleNode("Index")?.InnerText, itemToken.SelectSingleNode("Type")?.InnerText, itemToken.SelectSingleNode("Name")?.InnerText, itemToken.SelectSingleNode("From")?.InnerText, itemToken.SelectSingleNode("To")?.InnerText, itemToken.SelectSingleNode("Timing")?.InnerText, itemToken.SelectSingleNode("Precision")?.InnerText, itemToken.SelectSingleNode("Color")?.InnerText));
+            }
         }
         double tryZoomA = 1;
         double tryZoomF = 1;

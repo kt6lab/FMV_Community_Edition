@@ -9,6 +9,11 @@ namespace FMV_Standard.Shared
 {
     public class StateContainer
     {
+        public int simulator = 0; // 0:初期モード, 1:トークンセットモード, 2:シミュレーションモード
+        public List<Token> preTokenList { get; set; } = new List<Token>(); // アクティベートするためのトークンリスト
+        public List<Token> tokenList { get; set; } = new List<Token>(); // 追加済みトークンのリスト
+        public List<Token> baseTokenList { get; set; } = new List<Token>(); // 追加可能トークンのリスト
+        public bool showPNTokenSet { get; set; } = false;
         private string _selectedFn = "-1";
         private string _selectedLabel = "";
         public bool showProperties = false;

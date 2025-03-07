@@ -1,0 +1,48 @@
+﻿.modal-pn {
+    max-width: fit-content;
+    margin-top: 0;
+    margin-right: auto;
+    margin-bottom: auto;
+    margin-left: 3.5rem;
+}
+
+.modal-body {
+    overflow-y: scroll;
+    max-height: 80vh;
+    font-family: Consolas, Courier New, Courier, monospace;
+    font-size: smaller;
+    white-space: pre;
+}
+
+.modal-dialog__token .modal-header {
+    align-items: center;
+}
+
+.modal-dialog__token .modal-header__text {
+    margin: .5rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.modal-dialog__token .modal-body {
+    overflow-y: auto;
+}
+
+.modal-dialog__token .modal-body table {
+border-collapse: collapse;
+border-spacing: 0;
+}
+
+.modal-dialog__token .modal-body table > tr > th,
+.modal-dialog__token .modal-body table >tr > td {
+    padding: .25rem;
+    border: 1px solid #ccc;
+}
+
+.modal-dialog__token .modal-body table > tr > th {
+    background-color: #ddd;
+}
+
+.modal-dialog__token .modal-body table > tr > td:first-of-type {
+    background-color: #efefef;
+}

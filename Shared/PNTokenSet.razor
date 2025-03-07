@@ -1,0 +1,252 @@
+﻿@inject StateContainer stateContainer
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Localization.SharedResource> Loc
+
+<div id="myModal" class="modal fade show" style="display:block" aria-modal="true" role="dialog" @onclick=checkForClose>
+    <div class="modal-dialog modal-dialog-centered modal-pn modal-dialog__token" @onclick:stopPropagation>
+        <div class="modal-content">
+            @if (stateContainer.simulator == 1)
+            {
+                <div class="modal-header sticky-top bg-white p-0">
+                    <div class="modal-header__text">追加可能トークン</div>
+                    <button type="button" class="btn btn-menu close m-0 pt-1 pb-1 pl-3 pr-3" @onclick="checkForClose">&times;</button>
+                </div>
+                <div class="modal-body p-0">
+                    <table>
+                        @if (stateContainer.baseTokenList.Count != 0)
+                        {
+                            <tr><th>Token</th><th>From</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
+                        }
+                        @foreach (Token token in stateContainer.baseTokenList)
+                        {
+                            @if (!stateContainer.selectedMulti.Contains(token.From))
+                            {
+                                continue;
+                            }
+                            <tr>
+                                <td>@token.Type</td>
+                                <td>@token.From</td>
+                                <td>@token.To</td>
+                                <td>
+                                    <select @onchange=@((e) => SelectTiming(e, token))>
+                                        @foreach (var name in timingSelectList)
+                                        {
+                                            <option value=@name>@name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <select @onchange=@((e) => SelectPrecision(e, token))>
+                                        @foreach (var name in precisionSelectList)
+                                        {
+                                            <option value=@name>@name</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td><button type="button" class="btn btn-half" @onclick="@((e) => AddToken(e, token))">＋</button></td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+            <div class="modal-header sticky-top bg-white p-0">
+            <div class="modal-header__text">トークン一覧</div>
+            @if (stateContainer.simulator == 2)
+            {
+                <button type="button" class="close m-0 pt-1 pb-1 pl-3 pr-3" @onclick="checkForClose">&times;</button>
+            }
+            </div>
+            <div class="modal-body p-0">
+                <table>
+                    <tr><th>Token</th><th>From</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
+                    @foreach (Token token in stateContainer.tokenList)
+                    {
+                        @if (!stateContainer.selectedMulti.Contains(token.From))
+                        {
+                            continue;
+                        }
+                        <tr>
+                            <td>@token.Type</td>
+                            <td>@token.From</td>
+                            <td>@token.To</td>
+                            <td>
+                                <select @onchange=@((e) => SelectTiming(e, token))>
+                                    @foreach (var name in timingSelectList)
+                                    {
+                                        @if (@name == token.Timing)
+                                        {
+                                            <option value=@name selected>@name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value=@name>@name</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <select @onchange=@((e) => SelectPrecision(e, token))>
+                                    @foreach (var name in precisionSelectList)
+                                    {
+                                        @if (@name == token.Precision)
+                                        {
+                                            <option value=@name selected>@name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value=@name>@name</option>
+                                        }
+                                    }
+                                </select>
+                            </td>
+                            @if (stateContainer.simulator != 2)
+                            {
+                                <td><button type="button" class="btn btn-half" @onclick="@((e) => RemoveToken(e, token))">－</button></td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    private List<string> timingSelectList = new() { "時間通り", "早すぎる", "遅すぎる", "まったくない" };
+    private List<string> precisionSelectList = new() { "正確", "許容", "不正確", "誤り" };
+
+    protected override void OnInitialized()
+    {
+        stateContainer.baseTokenList.Clear();
+        foreach (Aspect oaspect in stateContainer.outputsList)
+        {
+            var index = "0";
+            foreach (Aspect aspect in stateContainer.aspectsList)
+            {
+                if (oaspect.IDName == aspect.IDName && oaspect.FunctionIDNr != aspect.FunctionIDNr)
+                {
+                    if (stateContainer.baseTokenList.Count() != 0)
+                    {
+                        index = (Int32.Parse(stateContainer.baseTokenList.Last().Index) + 1).ToString();
+                    }
+
+                    Token token = new Token(index, aspect.Type, aspect.IDName, oaspect.FunctionIDNr, aspect.FunctionIDNr, "時間通り", "正確", "black");
+                    stateContainer.baseTokenList.Add(token);
+                }
+            }
+        }
+    }
+
+    private void SelectTiming(ChangeEventArgs e, Token token)
+    {
+        if (e.Value is not null)
+        {
+            token.Timing = (string)e.Value;
+            SetColor(token);
+        }
+    }
+
+    private void SelectPrecision(ChangeEventArgs e, Token token)
+    {
+        if (e.Value is not null)
+        {
+            token.Precision = (string)e.Value;
+            SetColor(token);
+        }
+    }
+
+    private void SetColor(Token token)
+    {
+        string color = "black";
+        if (token.Timing != "時間通り" || token.Precision != "正確")
+        {
+            color = "red";
+        }
+        token.Color = color;
+    }
+
+    private void AddToken(MouseEventArgs e, Token token)
+    {
+        var index = "0";
+        @if (stateContainer.tokenList.Count() != 0)
+        {
+            index = (Int32.Parse(stateContainer.tokenList.Last().Index) + 1).ToString();
+        }
+
+        Token newToken = new Token(index, token.Type, token.Name, token.From, token.To, token.Timing, token.Precision, token.Color);
+        stateContainer.tokenList.Add(newToken);
+
+        stateContainer.updateUndo();
+        if (stateContainer.projectData_Undo[0].SelectSingleNode("//FM/Tokens") == null)
+        {
+            stateContainer.projectData_Undo[0].SelectSingleNode("//FM")!.AppendChild(stateContainer.projectData_Undo[0].CreateElement("Tokens"));
+        }
+        XmlNode tokenXml = stateContainer.projectData_Undo[0].CreateElement("Token");
+        XmlNode indexXml = stateContainer.projectData_Undo[0].CreateElement("Index");
+        indexXml.InnerText = newToken.Index;
+        tokenXml.AppendChild(indexXml);
+        XmlNode typeXml = stateContainer.projectData_Undo[0].CreateElement("Type");
+        typeXml.InnerText = newToken.Type;
+        tokenXml.AppendChild(typeXml);
+        XmlNode nameXml = stateContainer.projectData_Undo[0].CreateElement("Name");
+        nameXml.InnerText = newToken.Name;
+        tokenXml.AppendChild(nameXml);
+        XmlNode fromXml = stateContainer.projectData_Undo[0].CreateElement("From");
+        fromXml.InnerText = newToken.From;
+        tokenXml.AppendChild(fromXml);
+        XmlNode toXml = stateContainer.projectData_Undo[0].CreateElement("To");
+        toXml.InnerText = newToken.To;
+        tokenXml.AppendChild(toXml);
+        XmlNode timingXml = stateContainer.projectData_Undo[0].CreateElement("Timing");
+        timingXml.InnerText = newToken.Timing;
+        tokenXml.AppendChild(timingXml);
+        XmlNode precisionXml = stateContainer.projectData_Undo[0].CreateElement("Precision");
+        precisionXml.InnerText = newToken.Precision;
+        tokenXml.AppendChild(precisionXml);
+        XmlNode colorXml = stateContainer.projectData_Undo[0].CreateElement("Color");
+        colorXml.InnerText = newToken.Color;
+        tokenXml.AppendChild(colorXml);
+        stateContainer.projectData_Undo[0].SelectSingleNode("//FM/Tokens")!.AppendChild(tokenXml);
+    }
+
+    private void RemoveToken(MouseEventArgs e, Token token)
+    {
+        stateContainer.tokenList.Remove(token);
+
+        stateContainer.updateUndo();
+        foreach (XmlNode tokenXml in stateContainer.projectData_Undo[0].SelectNodes("//FM/Tokens/Token")!)
+        {
+            if (tokenXml.FirstChild is not null)
+            {
+                if (token.Index == tokenXml.FirstChild.InnerText)
+                {
+                    stateContainer.projectData_Undo[0].SelectSingleNode("//FM/Tokens")!.RemoveChild(tokenXml);
+                    break;
+                }
+            }
+
+        }
+
+    }
+
+    private void checkForClose()
+    {
+        stateContainer.selectedFn = "-1";
+        stateContainer.selectedLabel = "";
+        stateContainer.cycleFMI = -1;
+        stateContainer.fmiMessage = "";
+        foreach (var fn in stateContainer.functionList)
+        {
+            fn.resetAspects();
+        }
+        foreach (var coupling in stateContainer.couplingList)
+        {
+            coupling.activated = false;
+            coupling.wasActive = false;
+            coupling.fmiHighlight = "";
+        }
+        OnClose.InvokeAsync();
+    }
+}

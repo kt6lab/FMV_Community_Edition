@@ -1,0 +1,62 @@
+﻿@inject StateContainer stateContainer
+@inject IConfiguration render
+
+@if (stateContainer.selectedCoupling is not null)
+{
+    var coupling = stateContainer.selectedCoupling;
+    <g>
+    @if (stateContainer.selectedLabel == coupling.Name)
+    {
+        @foreach (Token token in stateContainer.tokenList)
+        {
+            @if (token.Name == coupling.label && token.To == coupling.toFn)
+            {
+                stateContainer.tokenList.Remove(token);
+                stateContainer.preTokenList.Add(token);
+                <svg>
+                    <circle cx="0" cy="0" r="5" fill="@token.Color">
+                        <animateMotion begin="0s" fill="freeze" dur="2s" repeatCount="1" restart="never" keyPoints="1;0" keyTimes="0;1" path="@coupling.curve2"/>
+                    </circle>
+                    <text transform="scale(@stateContainer.tempZoomF.ToString("0.##", CultureInfo.InvariantCulture))" x="0" y="0"font-size="6pt" text-anchor="middle" width="60" height="40" font-family="'PT Sans Caption', sans-serif" fill="white">
+                        <tspan x="0" dy="3">@coupling.toType</tspan>
+                        <animateMotion begin="0s" fill="freeze" dur="2s" repeatCount="1" restart="never" keyPoints="1;0" keyTimes="0;1" path="@coupling.curve2" />
+                    </text>
+                </svg>
+                break;
+            }
+        }
+    }
+    </g>
+    Update();
+}
+
+@code {
+    [Parameter]
+    public EventCallback refreshParent { get; set; }
+
+    private async void Update()
+    {
+        // アニメーションは2秒設定のため、2秒後に再描画
+        await Task.Delay(2000);
+        Reset();
+    }
+
+    private void Reset()
+    {
+        stateContainer.selectedFn = "-1";
+        stateContainer.selectedLabel = "";
+        stateContainer.cycleFMI = -1;
+        stateContainer.fmiMessage = "";
+        foreach (var fn in stateContainer.functionList)
+        {
+            fn.resetAspects();
+        }
+        foreach (var coupling in stateContainer.couplingList)
+        {
+            coupling.activated = false;
+            coupling.wasActive = false;
+            coupling.fmiHighlight = "";
+        }
+        refreshParent.InvokeAsync();
+    }
+}

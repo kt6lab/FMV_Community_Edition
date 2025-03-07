@@ -1,0 +1,27 @@
+﻿@inject StateContainer stateContainer
+@inject IConfiguration render
+
+@foreach (Function function in stateContainer.functionList)
+{
+    var displayFnText = function.ReturnTextLines(int.Parse(render[$"{function.fnStyle}:fn-font-wrap"]!));
+    var fnTextCount = displayFnText.Count;
+    int count = 0;
+    <g class="fn-point" transform="translate(@function.x.ToString("0.##", CultureInfo.InvariantCulture),@function.y.ToString("0.##", CultureInfo.InvariantCulture))">
+        @foreach (Token token in stateContainer.tokenList.FindAll(x => x.From == function.IDNr))
+        {
+            <circle cx="@(((50 / stateContainer.tempZoomF - count * 11 + 22).ToString("0.##", CultureInfo.InvariantCulture)))" cy="@((50 / stateContainer.tempZoomF - fnTextCount * 5 - 5).ToString("0.##", CultureInfo.InvariantCulture))" r="5" fill="@token.Color" />
+            <g>
+                <text transform="scale(@stateContainer.tempZoomF.ToString("0.##", CultureInfo.InvariantCulture))" x="@((50 / stateContainer.tempZoomF - count * 11 + 22).ToString("0.##", CultureInfo.InvariantCulture))" y="@((50 / stateContainer.tempZoomF - fnTextCount * 5 - 5).ToString("0.##", CultureInfo.InvariantCulture))"
+                        font-size="6pt" text-anchor="middle" width="60" height="40" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <tspan x="@((50 / stateContainer.tempZoomF - count * 11 + 22).ToString("0.##", CultureInfo.InvariantCulture))" dy="3">@token.Type.Substring(0, 1)</tspan>
+                </text>
+            </g>
+            count++;
+        }
+    </g>
+}
+
+@code {
+    [Parameter]
+    public EventCallback refreshParent { get; set; }
+}

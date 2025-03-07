@@ -1,0 +1,78 @@
+﻿@inject StateContainer stateContainer
+@inject IConfiguration render
+
+@foreach (Function function in stateContainer.functionList)
+{
+    int icount = 0;
+    int tcount = 0;
+    int pcount = 0;
+    int rcount = 0;
+    int ccount = 0;
+    double fontAdjust = (6 - double.Parse(render[$"{function.options}aspect-font-size"]!, CultureInfo.InvariantCulture)) / 2;
+    var aY_I = (double.Parse(render[$"{function.fnStyle}:aspectY:I"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    var aY_T = (double.Parse(render[$"{function.fnStyle}:aspectY:T"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    var aY_C = (double.Parse(render[$"{function.fnStyle}:aspectY:C"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    var aY_O = (double.Parse(render[$"{function.fnStyle}:aspectY:O"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    var aY_P = (double.Parse(render[$"{function.fnStyle}:aspectY:P"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    var aY_R = (double.Parse(render[$"{function.fnStyle}:aspectY:R"]!, CultureInfo.InvariantCulture) + 2.8 - fontAdjust).ToString("0.##", CultureInfo.InvariantCulture);
+    <g class="fn-point" transform="translate(@function.x.ToString("0.##", CultureInfo.InvariantCulture),@function.y.ToString("0.##", CultureInfo.InvariantCulture))">
+        @foreach (Token token in stateContainer.preTokenList.FindAll(x => x.To == function.IDNr))
+        {
+            if (token.Type == "Input")
+            {
+                var aX_I = (double.Parse(render[$"{function.fnStyle}:aspectX:I"]!, CultureInfo.InvariantCulture) - (icount*11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <circle cx=@aX_I cy=@render[$"{function.fnStyle}:aspectY:I"] r=@render[$"{function.options}aspect-r"] fill="@token.Color" />
+                aX_I = (double.Parse(render[$"{function.fnStyle}:aspectX:I"]!, CultureInfo.InvariantCulture) - 1.8 + fontAdjust - (icount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <g font-size="@(render[$"{function.options}aspect-font-size"]+"pt")" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <text x=@aX_I y=@aY_I>I</text>
+                </g>
+                icount++;
+            }
+            if (token.Type == "Time")
+            {
+                var aX_T = (double.Parse(render[$"{function.fnStyle}:aspectX:T"]!, CultureInfo.InvariantCulture) - (tcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <circle cx=@aX_T cy=@render[$"{function.fnStyle}:aspectY:T"] r=@render[$"{function.options}aspect-r"] fill="@token.Color" />
+                aX_T = (double.Parse(render[$"{function.fnStyle}:aspectX:T"]!, CultureInfo.InvariantCulture) - 2.6 + fontAdjust - (tcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <g font-size="@(render[$"{function.options}aspect-font-size"]+"pt")" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <text x=@aX_T y=@aY_T>T</text>
+                </g>
+                tcount++;
+            }
+            if (token.Type == "Precondition")
+            {
+                var aX_P = (double.Parse(render[$"{function.fnStyle}:aspectX:P"]!, CultureInfo.InvariantCulture) - (pcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <circle cx=@aX_P cy=@render[$"{function.fnStyle}:aspectY:P"] r=@render[$"{function.options}aspect-r"] fill="@token.Color" />
+                aX_P = (double.Parse(render[$"{function.fnStyle}:aspectX:P"]!, CultureInfo.InvariantCulture) - 2.4 + fontAdjust - (pcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <g font-size="@(render[$"{function.options}aspect-font-size"]+"pt")" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <text x=@aX_P y=@aY_P>P</text>
+                </g>
+                pcount++;
+            }
+            if (token.Type == "Resource")
+            {
+                var aX_R = (double.Parse(render[$"{function.fnStyle}:aspectX:R"]!, CultureInfo.InvariantCulture) + (rcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <circle cx=@aX_R cy=@render[$"{function.fnStyle}:aspectY:R"] r=@render[$"{function.options}aspect-r"] fill="@token.Color" />
+                aX_R = (double.Parse(render[$"{function.fnStyle}:aspectX:R"]!, CultureInfo.InvariantCulture) - 2.7 + fontAdjust + (rcount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <g font-size="@(render[$"{function.options}aspect-font-size"]+"pt")" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <text x=@aX_R y=@aY_R>R</text>
+                </g>
+                rcount++;
+            }
+            if (token.Type == "Control")
+            {
+                var aX_C = (double.Parse(render[$"{function.fnStyle}:aspectX:C"]!, CultureInfo.InvariantCulture) + (ccount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <circle cx=@aX_C cy=@render[$"{function.fnStyle}:aspectY:C"] r=@render[$"{function.options}aspect-r"] fill="@token.Color" />
+                aX_C = (double.Parse(render[$"{function.fnStyle}:aspectX:C"]!, CultureInfo.InvariantCulture) - 3.1 + fontAdjust + (ccount * 11)).ToString("0.##", CultureInfo.InvariantCulture);
+                <g font-size="@(render[$"{function.options}aspect-font-size"]+"pt")" font-family="'PT Sans Caption', sans-serif" fill="white">
+                    <text x=@aX_C y=@aY_C>C</text>
+                </g>
+                ccount++;
+            }
+        }
+    </g>
+}
+
+@code {
+    [Parameter]
+    public EventCallback refreshParent { get; set; }
+}
