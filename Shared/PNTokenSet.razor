@@ -15,7 +15,7 @@
                     <table>
                         @if (stateContainer.baseTokenList.Count != 0)
                         {
-                            <tr><th>Token</th><th>From</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
+                            <tr><th>Token</th><th>From</th><th>Name</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
                         }
                         @foreach (Token token in stateContainer.baseTokenList)
                         {
@@ -26,6 +26,7 @@
                             <tr>
                                 <td>@token.Type</td>
                                 <td>@token.From</td>
+                                <td>@token.Name</td>
                                 <td>@token.To</td>
                                 <td>
                                     <select @onchange=@((e) => SelectTiming(e, token))>
@@ -58,7 +59,7 @@
             </div>
             <div class="modal-body p-0">
                 <table>
-                    <tr><th>Token</th><th>From</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
+                    <tr><th>Token</th><th>From</th><th>Name</th><th>To</th><th>Timing</th><th>Precision</th><th></th></tr>
                     @foreach (Token token in stateContainer.tokenList)
                     {
                         @if (!stateContainer.selectedMulti.Contains(token.From))
@@ -68,6 +69,7 @@
                         <tr>
                             <td>@token.Type</td>
                             <td>@token.From</td>
+                            <td>@token.Name</td>
                             <td>@token.To</td>
                             <td>
                                 <select @onchange=@((e) => SelectTiming(e, token))>

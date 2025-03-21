@@ -9,6 +9,10 @@
         {
             <button type="button" class="btn btn-pn oi oi-plus" style="width:100%" @onclick=SetToken> Set Token</button>
         }
+        else if (stateContainer.simulator == 1)
+        {
+            <button type="button" class="btn btn-pn oi oi-minus" style="width:100%" @onclick=UnsetToken> Unset Token</button>
+        }
         else
         {
             <button type="button" class="btn btn-pn oi oi-plus" style="width:100%" @onclick=SetToken disabled> Set Token</button>
@@ -86,6 +90,7 @@
 @code {
     [Parameter]
     public EventCallback refreshParent { get; set; }
+    private List<Token> initTokenList { get; set; } = new List<Token>(); // 初期トークンのリスト
 
     private void ShowSetToken()
     {
@@ -99,34 +104,49 @@
         Reset();
     }
 
+    private void UnsetToken()
+    {
+        stateContainer.simulator = 0;
+        Reset();
+    }
+
     private void StartSimulation()
     {
         stateContainer.simulator = 2;
+        initTokenList.Clear();
+        foreach (Token token in stateContainer.tokenList)
+        {
+            initTokenList.Add(new Token(token.Index, token.Type, token.Name, token.From, token.To, token.Timing, token.Precision, token.Color));
+        }
         Reset();
 
     }
 
     private void StopSimulation()
     {
-        stateContainer.simulator = 0;
+        stateContainer.simulator = 1;
         stateContainer.tokenList.Clear();
+        foreach (Token token in initTokenList)
+        {
+            stateContainer.tokenList.Add(new Token(token.Index, token.Type, token.Name, token.From, token.To, token.Timing, token.Precision, token.Color));
+        }
         stateContainer.preTokenList.Clear();
         Reset();
     }
 
     private void Activate()
     {
-        @foreach (var function in stateContainer.functionList.FindAll(x => stateContainer.selectedMulti.Contains(x.IDNr)))
+        foreach (var function in stateContainer.functionList.FindAll(x => stateContainer.selectedMulti.Contains(x.IDNr)))
         {
             int count = 0;
             List<Aspect> removeAspectList = new List<Aspect>();
             List<Token> removeTokenList = new List<Token>();
-            @foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.FunctionIDNr == function.IDNr))
+            foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.FunctionIDNr == function.IDNr))
             {
                 count++;
-                @foreach (Token token in stateContainer.preTokenList)
+                foreach (Token token in stateContainer.preTokenList)
                 {
-                    @if (token.Type == aspect.Type && token.To == function.IDNr && token.Name == aspect.IDName)
+                    if (token.Type == aspect.Type && token.To == function.IDNr && token.Name == aspect.IDName)
                     {
                         removeTokenList.Add(token);
                         break;
@@ -136,18 +156,18 @@
             // Activateするのに必要な側面の数と揃ってる数がイコールか判定
             if (count == removeTokenList.Count && count != 0)
             {
-                @foreach (Aspect oaspect in stateContainer.outputsList.FindAll(x => x.FunctionIDNr == function.IDNr))
+                foreach (Aspect oaspect in stateContainer.outputsList.FindAll(x => x.FunctionIDNr == function.IDNr))
                 {
-                    @foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.IDName == oaspect.IDName))
+                    foreach (Aspect aspect in stateContainer.aspectsList.FindAll(x => x.IDName == oaspect.IDName))
                     {
                         var index = "0";
-                        @if (stateContainer.tokenList.Count() != 0)
+                        if (stateContainer.tokenList.Count() != 0)
                         {
                             index = (Int32.Parse(stateContainer.tokenList.Last().Index) + 1).ToString();
                         }
                         Token newToken = new Token(index, aspect.Type, aspect.IDName, function.IDNr, aspect.FunctionIDNr, "時間通り", "正確", "black");
                         stateContainer.tokenList.Add(newToken);
-                        @foreach (Token token in removeTokenList)
+                        foreach (Token token in removeTokenList)
                         {
                             stateContainer.preTokenList.Remove(token);
                         }
@@ -156,7 +176,7 @@
                 // Outputなしの場合
                 if (stateContainer.outputsList.FindAll(x => x.FunctionIDNr == function.IDNr).Count() == 0)
                 {
-                    @foreach (Token token in removeTokenList)
+                    foreach (Token token in removeTokenList)
                     {
                         stateContainer.preTokenList.Remove(token);
                     }

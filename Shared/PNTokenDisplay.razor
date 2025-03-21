@@ -4,7 +4,7 @@
 @foreach (Function function in stateContainer.functionList)
 {
     var displayFnText = function.ReturnTextLines(int.Parse(render[$"{function.fnStyle}:fn-font-wrap"]!));
-    var fnTextCount = displayFnText.Count;
+    var fnTextCount = 1;
     int count = 0;
     <g class="fn-point" transform="translate(@function.x.ToString("0.##", CultureInfo.InvariantCulture),@function.y.ToString("0.##", CultureInfo.InvariantCulture))">
         @foreach (Token token in stateContainer.tokenList.FindAll(x => x.From == function.IDNr))
